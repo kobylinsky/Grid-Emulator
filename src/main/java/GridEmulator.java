@@ -17,7 +17,7 @@ public class GridEmulator {
         resources.forEach(Resource::start);
 
         for (Task task : tasks) {
-            LoadBalancer.getTargetResource(LoadBalancer.Rule.RANDOM, task, resources).executeTask(task);
+            LoadBalancer.getTargetResource(LoadBalancer.Rule.MIN_EXECUTION, task, resources).executeTask(task);
             Thread.sleep((maxTaskDuration + minTaskDuration) / (amountOfResources * 2));
         }
 

@@ -47,6 +47,14 @@ public class Resource extends Thread {
         shouldBeTerminated = true;
     }
 
+    public long getQueueDuration() {
+        long timeLeft = 0;
+        for (Task task : queue) {
+            timeLeft += task.getExecutionTime();
+        }
+        return timeLeft;
+    }
+
     @Override
     public String toString() {
         return "Resource[" + id + "]";

@@ -4,13 +4,31 @@ import java.util.List;
 
 public class LoadBalancer {
 
+    private static int lastAssignedResourceId = -1;
+
     public static Resource getTargetResource(Rule rule, Task task, List<Resource> resources) {
         switch (rule) {
             case RANDOM:
-                return resources.get((int) (Math.random() * resources.size()));
+                return getResourceByRandom(resources);
+            case ROUND_ROBIN:
+                return getResourceByRoundRobin(resources);
+            case MIN_EXECUTION:
+                return getResourceByMinExecution(resources);
             default:
                 throw new NotImplementedException();
         }
+    }
+
+    private static Resource getResourceByRandom(List<Resource> resources) {
+        return resources.get((int) (Math.random() * resources.size()));
+    }
+
+    private static Resource getResourceByRoundRobin(List<Resource> resources) {
+        return resources.get(++lastAssignedResourceId < resources.size() ? lastAssignedResourceId : (lastAssignedResourceId = 0));
+    }
+
+    private static Resource getResourceByMinExecution(List<Resource> resources) {
+        return resources.stream().min((r1, r2) -> Long.compare(r1.getQueueDuration(), r2.getQueueDuration())).get();
     }
 
     enum Rule {
