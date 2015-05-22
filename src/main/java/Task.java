@@ -15,7 +15,7 @@ public class Task {
     }
 
     public void addedToTheQueue() {
-        startTime = Optional.of(System.currentTimeMillis());
+        startTime = Optional.of(System.nanoTime());
     }
 
     public long getWaitTime() {
@@ -37,7 +37,7 @@ public class Task {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        endTime = Optional.of(System.currentTimeMillis());
+        endTime = Optional.of(System.nanoTime());
         //System.out.println(this + " completed");
     }
 

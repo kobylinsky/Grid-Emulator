@@ -9,6 +9,9 @@ public class Resource extends Thread {
     private int id;
     private boolean shouldBeTerminated;
 
+    private long idleStartTime;
+    private long idle;
+
     public Resource() {
         id = nextId++;
         queue = new LinkedBlockingQueue<>();
@@ -19,7 +22,6 @@ public class Resource extends Thread {
         synchronized (queue) {
             queue.add(task);
             task.addedToTheQueue();
-            //System.out.println(task + " will be executed by " + this);
         }
     }
 
@@ -31,9 +33,16 @@ public class Resource extends Thread {
                 task = Optional.ofNullable(queue.peek());
             }
             if (task.isPresent()) {
+                if (idleStartTime != 0) {
+                    idle += (System.nanoTime() - idleStartTime);
+                    idleStartTime = 0;
+                }
                 task.get().execute();
                 synchronized (queue) {
                     queue.remove(task.get());
+                    if (!isBusy()) {
+                        idleStartTime = System.nanoTime();
+                    }
                 }
             }
         }
@@ -45,6 +54,10 @@ public class Resource extends Thread {
 
     public int getQueueSize() {
         return queue.size();
+    }
+
+    public long getIdle() {
+        return idle;
     }
 
     public void shouldBeTerminated() {
@@ -62,5 +75,10 @@ public class Resource extends Thread {
     @Override
     public String toString() {
         return "Resource[" + id + "]";
+    }
+
+    public void resetIdle() {
+        idle = 0;
+        idleStartTime = 0;
     }
 }
