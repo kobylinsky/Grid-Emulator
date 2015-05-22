@@ -43,6 +43,9 @@ public class Resource extends Thread {
         return queue.size() != 0;
     }
 
+    public void shouldBeTerminated() {
+        shouldBeTerminated = true;
+    }
 
     @Override
     public String toString() {

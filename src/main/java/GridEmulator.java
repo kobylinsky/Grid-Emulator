@@ -5,11 +5,11 @@ import java.util.Random;
 public class GridEmulator {
 
     public static void main(String[] args) throws InterruptedException {
-        int amountOfTasks = 100;
+        int amountOfTasks = 50;
         int amountOfResources = 5;
 
-        int minTaskDuration = 1000;
-        int maxTaskDuration = 2000;
+        int minTaskDuration = 100;
+        int maxTaskDuration = 500;
 
         List<Task> tasks = generateTasks(amountOfTasks, minTaskDuration, maxTaskDuration);
         List<Resource> resources = generateResources(amountOfResources);
@@ -17,14 +17,25 @@ public class GridEmulator {
         resources.forEach(Resource::start);
 
         for (Task task : tasks) {
-            LoadBalancer.getTargetResource(task, resources).executeTask(task);
-            Thread.sleep((maxTaskDuration - minTaskDuration) / amountOfResources);
+            LoadBalancer.getTargetResource(LoadBalancer.Rule.RANDOM, task, resources).executeTask(task);
+            Thread.sleep((maxTaskDuration + minTaskDuration) / (amountOfResources * 2));
         }
 
         while (resources.stream().filter(Resource::isBusy).count() != 0 ||
                 tasks.stream().filter(Task::isCompleted).count() == 0) {
             Thread.sleep(100);
         }
+
+        resources.forEach(Resource::shouldBeTerminated);
+
+        long minWaitTime = tasks.stream().max((t1, t2) -> Long.compare(t1.getWaitTime(), t2.getWaitTime())).get().getWaitTime();
+        long maxWaitTime = tasks.stream().max((t1, t2) -> Long.compare(t1.getWaitTime(), t2.getWaitTime())).get().getWaitTime();
+        long averageWaitTime = 0;
+        for (Task task : tasks) averageWaitTime += task.getWaitTime();
+        averageWaitTime /= tasks.size();
+        System.out.println("Min wait time: " + minWaitTime);
+        System.out.println("Max wait time: " + maxWaitTime);
+        System.out.println("Average wait time: " + averageWaitTime);
     }
 
 
