@@ -19,7 +19,7 @@ public class Resource extends Thread {
         synchronized (queue) {
             queue.add(task);
             task.addedToTheQueue();
-            System.out.println(task + " will be executed by " + this);
+            //System.out.println(task + " will be executed by " + this);
         }
     }
 
@@ -41,6 +41,10 @@ public class Resource extends Thread {
 
     public boolean isBusy() {
         return queue.size() != 0;
+    }
+
+    public int getQueueSize() {
+        return queue.size();
     }
 
     public void shouldBeTerminated() {

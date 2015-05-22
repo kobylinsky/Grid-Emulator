@@ -38,7 +38,7 @@ public class Task {
             e.printStackTrace();
         }
         endTime = Optional.of(System.currentTimeMillis());
-        System.out.println(this + " completed");
+        //System.out.println(this + " completed");
     }
 
     @Override
