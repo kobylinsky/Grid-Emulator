@@ -47,4 +47,10 @@ public class Task {
     public String toString() {
         return "Task[" + id + "]:{" + executionTime + "}";
     }
+
+    public void reset() {
+        startTime = Optional.empty();
+        endTime = Optional.empty();
+        waitTime = Optional.empty();
+    }
 }

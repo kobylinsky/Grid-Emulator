@@ -34,6 +34,7 @@ public class Resource extends Thread {
 
     @Override
     public void run() {
+        idleStartTime = System.currentTimeMillis();
         while (!shouldBeTerminated) {
             Optional<Task> task;
             synchronized (queue) {
@@ -85,6 +86,10 @@ public class Resource extends Thread {
         return timeLeft;
     }
 
+    public double getProcessingRate() {
+        return processingRate;
+    }
+
     @Override
     public String toString() {
         return "Resource[" + id + "]";
@@ -99,7 +104,7 @@ public class Resource extends Thread {
 
     }
 
-    public void resetIdle() {
+    public void reset() {
         idle = 0;
         idleStartTime = 0;
     }
