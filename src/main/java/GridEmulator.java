@@ -1,6 +1,5 @@
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,15 +7,15 @@ import java.util.Random;
 
 public class GridEmulator {
 
-    public static void main(String[] args) throws InterruptedException, IOException {
-        int amountOfTasks = 1000;
-        int amountOfResources = 10;
+    public static void main(String[] args) throws Exception {
+        int amountOfTasks = 20;
+        int amountOfResources = 5;
 
         int minTaskDuration = 400;
         int maxTaskDuration = 600;
 
-        int minPingTime = 50;
-        int maxPingTime = 200;
+        int minPingTime = 10;
+        int maxPingTime = 50;
 
         List<Task> tasks = generateTasks(amountOfTasks, minTaskDuration, maxTaskDuration);
         List<Resource> resources = generateResources(amountOfResources, minPingTime, maxPingTime);
@@ -27,6 +26,7 @@ public class GridEmulator {
 
         BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), "windows-1251"));
         bufferedWriter.write(reportHeader);
+        bufferedWriter.newLine();
 
         resources.forEach(Resource::start);
         for (LoadBalancer.Rule rule : LoadBalancer.Rule.values()) {

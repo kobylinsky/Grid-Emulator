@@ -1,6 +1,5 @@
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.Collections;
 import java.util.List;
 
 public class LoadBalancer {
@@ -33,16 +32,34 @@ public class LoadBalancer {
     }
 
     private static Resource getResourceByMinExecution(List<Resource> resources) {
-        return resources.stream().min((r1, r2) -> Long.compare(r1.getQueueDuration(), r2.getQueueDuration())).get();
+        Resource resourceWithMinQueueDuration = resources.get(0);
+        for (Resource resource : resources) {
+            if (resource.getQueueDuration() < resourceWithMinQueueDuration.getQueueDuration()) {
+                resourceWithMinQueueDuration = resource;
+            }
+        }
+        return resourceWithMinQueueDuration;
     }
 
     private static Resource getResourceByMinQueueSize(List<Resource> resources) {
-        return resources.stream().min((r1, r2) -> Long.compare(r1.getQueueSize(), r2.getQueueSize())).get();
+        Resource resourceWithMinQueue = resources.get(0);
+        for (Resource resource : resources) {
+            if (resource.getQueueDuration() < resourceWithMinQueue.getQueueDuration()) {
+                resourceWithMinQueue = resource;
+            }
+        }
+        return resourceWithMinQueue;
     }
 
     private static Resource getResourceByKMeans(List<Resource> resources) {
-        Collections.shuffle(resources);
-        return resources.stream().limit(3).min((r1, r2) -> Long.compare(r1.getQueueSize(), r2.getQueueSize())).get();
+        Resource resourceWithMinQueue = resources.get(0);
+        for (int i = 0; i < resources.size() / 2; i++) {
+            Resource resource = resources.get(i);
+            if (resource.getQueueDuration() < resourceWithMinQueue.getQueueDuration()) {
+                resourceWithMinQueue = resource;
+            }
+        }
+        return resourceWithMinQueue;
     }
 
     enum Rule {
