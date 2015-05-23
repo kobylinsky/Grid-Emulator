@@ -1,4 +1,7 @@
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -12,8 +15,11 @@ public class GridEmulator {
         int minTaskDuration = 400;
         int maxTaskDuration = 600;
 
+        int minPingTime = 50;
+        int maxPingTime = 200;
+
         List<Task> tasks = generateTasks(amountOfTasks, minTaskDuration, maxTaskDuration);
-        List<Resource> resources = generateResources(amountOfResources);
+        List<Resource> resources = generateResources(amountOfResources, minPingTime, maxPingTime);
 
         String fileName = String.format("./%s.csv", System.currentTimeMillis());
         String reportHeader = "Алгоритм, Середній час очікування (мс), Максимальний час очікування (мс), " +
@@ -64,10 +70,13 @@ public class GridEmulator {
         return tasks;
     }
 
-    private static List<Resource> generateResources(int amount) {
+    private static List<Resource> generateResources(int amount, int minPingTIme, int maxPingTime) {
         ArrayList<Resource> resources = new ArrayList<>(amount);
+        Random random = new Random();
         for (int i = 0; i < amount; i++) {
-            resources.add(new Resource());
+            Resource resource = new Resource();
+            resource.setPingTime(random.nextInt(maxPingTime - minPingTIme) + minPingTIme);
+            resources.add(resource);
         }
         return resources;
     }
