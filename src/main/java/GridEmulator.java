@@ -22,8 +22,7 @@ public class GridEmulator {
 
         String fileName = String.format("./%s.csv", String.format("%d_%dres_%dtasks_%ddur",
                 System.currentTimeMillis(), amountOfResources, amountOfTasks, (minTaskDuration + maxTaskDuration) / 2));
-        String reportHeader = "РђР»РіРѕСЂРёС‚Рј, Р—Р°РіР°Р»СЊРЅРёР№ С‡Р°СЃ (РјСЃ), РЎРµСЂРµРґРЅС–Р№ С‡Р°СЃ РѕС‡С–РєСѓРІР°РЅРЅСЏ (РјСЃ), РњР°РєСЃРёРјР°Р»СЊРЅРёР№ С‡Р°СЃ РѕС‡С–РєСѓРІР°РЅРЅСЏ (РјСЃ), " +
-                "РЎРµСЂРµРґРЅС–Р№ С‡Р°СЃ РїСЂРѕСЃС‚РѕСЋ (РјСЃ), РњР°РєСЃРёРјР°Р»СЊРЅРёР№ С‡Р°СЃ РїСЂРѕСЃС‚РѕСЋ (РјСЃ)";
+        String reportHeader = "Алгоритм, Загальний час (мс), Середній час очікування (мс), Максимальний час очікування (мс), Середній час простою (мс), Максимальний час простою (мс)";
 
         final BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), "windows-1251"));
         bufferedWriter.write(reportHeader);
