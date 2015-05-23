@@ -9,15 +9,18 @@ public class Resource extends Thread {
     private int id;
     private boolean shouldBeTerminated;
 
+    private double processingRate;
+    private long pingTime;
+
     private long idleStartTime;
     private long idle;
 
-    private long pingTime;
-
-    public Resource() {
+    public Resource(double processingRate, long pingTime) {
         id = nextId++;
         queue = new LinkedBlockingQueue<>();
         shouldBeTerminated = false;
+        this.processingRate = processingRate;
+        this.pingTime = pingTime;
     }
 
     public void executeTask(Task task) {
@@ -38,14 +41,14 @@ public class Resource extends Thread {
             }
             if (task.isPresent()) {
                 if (idleStartTime != 0) {
-                    idle += (System.nanoTime() - idleStartTime);
+                    idle += (System.currentTimeMillis() - idleStartTime);
                     idleStartTime = 0;
                 }
-                task.get().execute();
+                task.get().execute(processingRate);
                 synchronized (queue) {
                     queue.remove(task.get());
                     if (queue.isEmpty()) {
-                        idleStartTime = System.nanoTime();
+                        idleStartTime = System.currentTimeMillis();
                     }
                 }
             }
@@ -70,10 +73,6 @@ public class Resource extends Thread {
 
     public void shouldBeTerminated() {
         shouldBeTerminated = true;
-    }
-
-    public void setPingTime(long pingTime) {
-        this.pingTime = pingTime;
     }
 
     public long getQueueDuration() {

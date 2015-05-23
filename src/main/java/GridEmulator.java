@@ -14,11 +14,10 @@ public class GridEmulator {
         int minTaskDuration = 400;
         int maxTaskDuration = 600;
 
-        int minPingTime = 10;
         int maxPingTime = 50;
 
         List<Task> tasks = generateTasks(amountOfTasks, minTaskDuration, maxTaskDuration);
-        List<Resource> resources = generateResources(amountOfResources, minPingTime, maxPingTime);
+        List<Resource> resources = generateResources(amountOfResources, 0.5d, maxPingTime);
 
         String fileName = String.format("./%s.csv", System.currentTimeMillis());
         String reportHeader = "Алгоритм, Середній час очікування (мс), Максимальний час очікування (мс), " +
@@ -41,15 +40,15 @@ public class GridEmulator {
                 Thread.sleep(10);
             }
 
-            long maxWaitTime = tasks.stream().max((t1, t2) -> Long.compare(t1.getWaitTime(), t2.getWaitTime())).get().getWaitTime() / 1000000;
+            long maxWaitTime = tasks.stream().max((t1, t2) -> Long.compare(t1.getWaitTime(), t2.getWaitTime())).get().getWaitTime();
             long avgWaitTime = 0;
             for (Task task : tasks) avgWaitTime += task.getWaitTime();
-            avgWaitTime /= amountOfTasks * 1000000;
+            avgWaitTime /= amountOfTasks;
 
-            long maxIdleTime = resources.stream().max((r1, r2) -> Long.compare(r1.getIdle(), r2.getIdle())).get().getIdle() / 1000000;
+            long maxIdleTime = resources.stream().max((r1, r2) -> Long.compare(r1.getIdle(), r2.getIdle())).get().getIdle();
             long avgIdleTime = 0;
             for (Resource resource : resources) avgIdleTime += resource.getIdle();
-            avgIdleTime /= amountOfResources * 1000000;
+            avgIdleTime /= amountOfResources;
 
             final String stats = rule.toString() + ", " + avgWaitTime + ", " + maxWaitTime + ", " + avgIdleTime + ", " + maxIdleTime;
             System.out.println(stats);
@@ -70,12 +69,11 @@ public class GridEmulator {
         return tasks;
     }
 
-    private static List<Resource> generateResources(int amount, int minPingTIme, int maxPingTime) {
+    private static List<Resource> generateResources(int amount, double fluctuationRate, int maxPingTime) {
         ArrayList<Resource> resources = new ArrayList<>(amount);
         Random random = new Random();
         for (int i = 0; i < amount; i++) {
-            Resource resource = new Resource();
-            resource.setPingTime(random.nextInt(maxPingTime - minPingTIme) + minPingTIme);
+            Resource resource = new Resource(1 - fluctuationRate + 2f * fluctuationRate * random.nextDouble(), random.nextInt(maxPingTime));
             resources.add(resource);
         }
         return resources;

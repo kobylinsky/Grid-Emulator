@@ -4,7 +4,7 @@ import java.util.List;
 
 public class LoadBalancer {
 
-    private static int lastAssignedResourceId = -1;
+    private static int roundRobinLastAssignedResourceId = -1;
 
     public static Resource getTargetResource(Rule rule, List<Resource> resources) {
         switch (rule) {
@@ -18,6 +18,8 @@ public class LoadBalancer {
                 return getResourceByMinQueueSize(resources);
             case K_MEANS:
                 return getResourceByKMeans(resources);
+            case ADAPTIVE:
+                return getResourceAdaptively(resources);
             default:
                 throw new NotImplementedException();
         }
@@ -28,7 +30,8 @@ public class LoadBalancer {
     }
 
     private static Resource getResourceByRoundRobin(List<Resource> resources) {
-        return resources.get(++lastAssignedResourceId < resources.size() ? lastAssignedResourceId : (lastAssignedResourceId = 0));
+        return resources.get(++roundRobinLastAssignedResourceId < resources.size() ?
+                roundRobinLastAssignedResourceId : (roundRobinLastAssignedResourceId = 0));
     }
 
     private static Resource getResourceByMinExecution(List<Resource> resources) {
@@ -44,7 +47,7 @@ public class LoadBalancer {
     private static Resource getResourceByMinQueueSize(List<Resource> resources) {
         Resource resourceWithMinQueue = resources.get(0);
         for (Resource resource : resources) {
-            if (resource.getQueueDuration() < resourceWithMinQueue.getQueueDuration()) {
+            if (resource.getQueueSize() < resourceWithMinQueue.getQueueSize()) {
                 resourceWithMinQueue = resource;
             }
         }
@@ -62,8 +65,14 @@ public class LoadBalancer {
         return resourceWithMinQueue;
     }
 
+    private static Resource getResourceAdaptively(List<Resource> resources) {
+        Resource resourceWithMinQueue = resources.get(0);
+
+        return resourceWithMinQueue;
+    }
+
     enum Rule {
-        RANDOM, ROUND_ROBIN, MIN_EXECUTION, MIN_QUEUE, K_MEANS
+        RANDOM, ROUND_ROBIN, MIN_EXECUTION, MIN_QUEUE, K_MEANS, ADAPTIVE
     }
 
 }

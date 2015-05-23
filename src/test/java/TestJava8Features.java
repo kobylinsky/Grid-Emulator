@@ -2,10 +2,9 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TestJava8Features {
 
@@ -14,7 +13,7 @@ public class TestJava8Features {
         Task task = new Task(1000);
         task.addedToTheQueue();
         assertFalse(task.isCompleted());
-        task.execute();
+        task.execute(1);
         assertTrue(task.isCompleted());
     }
 
@@ -26,7 +25,9 @@ public class TestJava8Features {
         tasks.add(task);
 
         List<Resource> resources = new ArrayList<>();
-        Resource resource = new Resource();
+        double fluctuationRate = 0.5d;
+        Random random = new Random();
+        Resource resource = new Resource(1 - fluctuationRate + 2f * fluctuationRate * random.nextDouble(), random.nextInt(50));
         resources.add(resource);
         resource.start();
         resource.executeTask(task);

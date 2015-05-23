@@ -8,6 +8,7 @@ public class Task {
 
     private Optional<Long> startTime = Optional.empty();
     private Optional<Long> endTime = Optional.empty();
+    private Optional<Long> waitTime = Optional.empty();
 
     public Task(int executionTime) {
         id = nextId++;
@@ -15,11 +16,11 @@ public class Task {
     }
 
     public void addedToTheQueue() {
-        startTime = Optional.of(System.nanoTime());
+        startTime = Optional.of(System.currentTimeMillis());
     }
 
     public long getWaitTime() {
-        return endTime.get() - startTime.get() - executionTime;
+        return waitTime.get();
     }
 
     public boolean isCompleted() {
@@ -30,14 +31,15 @@ public class Task {
         return executionTime;
     }
 
-    public void execute() {
+    public void execute(double processingSpeedFactor) {
         if (!startTime.isPresent()) throw new IllegalStateException("Task should be added to the queue first!");
         try {
-            Thread.sleep(getExecutionTime());
+            Thread.sleep((long) (executionTime / processingSpeedFactor));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        endTime = Optional.of(System.nanoTime());
+        endTime = Optional.of(System.currentTimeMillis());
+        waitTime = Optional.of(endTime.get() - startTime.get() - (long) (executionTime / processingSpeedFactor));
         //System.out.println(this + " completed");
     }
 
