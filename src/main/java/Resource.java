@@ -45,7 +45,7 @@ public class Resource extends Thread {
                     idle += (System.currentTimeMillis() - idleStartTime);
                     idleStartTime = 0;
                 }
-                task.get().execute(processingRate);
+                task.get().execute(this);
                 synchronized (queue) {
                     queue.remove(task.get());
                     if (queue.isEmpty()) {

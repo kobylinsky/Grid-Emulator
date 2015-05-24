@@ -7,11 +7,11 @@ import java.util.Map;
 
 public class LoadBalancer {
 
-    private static final Map<Resource, Long> resourcesDurationCache = new HashMap<>();
+    private static final Map<Resource, Long> resourcesQueueDurationCache = new HashMap<>();
     private static int roundRobinLastAssignedResourceId = -1;
     private static long resourceCacheUpdateTime;
 
-    public static Resource getTargetResource(Rule rule, Task task, List<Resource> resources) {
+    public static Resource getTargetResource(Rule rule, Task task, List<Resource> resources, long cacheUpdateInterval) {
         switch (rule) {
             case RANDOM:
                 return getResourceByRandom(resources);
@@ -24,7 +24,7 @@ public class LoadBalancer {
             case K_MEANS:
                 return getResourceByKMeans(resources);
             case ADAPTIVE:
-                return getResourceAdaptively(task, resources);
+                return getResourceAdaptively(task, resources, cacheUpdateInterval);
             default:
                 throw new NotImplementedException();
         }
@@ -74,31 +74,30 @@ public class LoadBalancer {
         return resourceWithMinQueue;
     }
 
-    private static Resource getResourceAdaptively(Task task, List<Resource> resources) {
-        if (System.currentTimeMillis() - resourceCacheUpdateTime > task.getExecutionTime() ||
+    private static Resource getResourceAdaptively(Task task, List<Resource> resources, long cacheUpdateInterval) {
+        if (System.currentTimeMillis() - resourceCacheUpdateTime > cacheUpdateInterval ||
                 resourceCacheUpdateTime == 0) {
-            resourcesDurationCache.clear();
+            resourcesQueueDurationCache.clear();
             for (Resource resource : resources) {
-                resourcesDurationCache.put(resource, resource.getQueueDuration());
+                resourcesQueueDurationCache.put(resource, resource.getQueueDuration());
             }
             resourceCacheUpdateTime = System.currentTimeMillis();
-            //System.out.println("Updated cache:" + resourcesDurationCache);
         }
 
-        Resource targetResource = resourcesDurationCache.keySet().stream().findFirst().get();
-        long targetResourceFutureQueueDuration = (long) (resourcesDurationCache.get(targetResource) +
-                task.getExecutionTime() / targetResource.getProcessingRate());
+        Resource targetResource = resourcesQueueDurationCache.keySet().stream().findFirst().get();
+        long targetResourceFutureQueueDuration = (long) (resourcesQueueDurationCache.get(targetResource) +
+                task.getDataAccessTime(targetResource) + task.getExecutionTime() / targetResource.getProcessingRate());
 
-        for (Resource resource : resourcesDurationCache.keySet()) {
+        for (Resource resource : resourcesQueueDurationCache.keySet()) {
             if (resource == targetResource) continue;
-            long resourceFutureQueueDuration = (long) (resourcesDurationCache.get(resource) +
-                    task.getExecutionTime() / resource.getProcessingRate());
+            long resourceFutureQueueDuration = (long) (resourcesQueueDurationCache.get(resource) +
+                    task.getDataAccessTime(resource) + task.getExecutionTime() / resource.getProcessingRate());
             if (resourceFutureQueueDuration < targetResourceFutureQueueDuration) {
                 targetResource = resource;
                 targetResourceFutureQueueDuration = resourceFutureQueueDuration;
             }
         }
-        resourcesDurationCache.put(targetResource, targetResourceFutureQueueDuration);
+        resourcesQueueDurationCache.put(targetResource, targetResourceFutureQueueDuration);
         return targetResource;
     }
 

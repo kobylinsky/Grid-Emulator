@@ -10,39 +10,39 @@ public class GridEmulator {
     private static final Map<LoadBalancer.Rule, long[]> RESULTS = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
-        int experiments = 10;
+        LoadBalancer.Rule[] rules = LoadBalancer.Rule.values();
+        int experiments = 5;
 
-        int amountOfTasks = 10;
+        int amountOfTasks = 100;
         int amountOfResources = 5;
 
         int minTaskDuration = 400;
         int maxTaskDuration = 600;
+        int cacheUpdateInterval = 500;
 
         int maxPingTime = 10;
+        int maxDataAccessTime = 50;
 
         String fileName = String.format("./%s.csv", String.format("%d_%dres_%dtasks_%ddur",
                 System.currentTimeMillis(), amountOfResources, amountOfTasks, (minTaskDuration + maxTaskDuration) / 2));
         String reportHeader = "Алгоритм, Загальний час (мс), Середній час очікування (мс), Максимальний час очікування (мс), Середній час простою (мс), Максимальний час простою (мс)";
 
-        final BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), "windows-1251"));
+        final BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8"));
         bufferedWriter.write(reportHeader);
         bufferedWriter.newLine();
 
         for (int i = 0; i < experiments; i++) {
-            List<Task> tasks = Utils.generateTasks(amountOfTasks, minTaskDuration, maxTaskDuration);
             List<Resource> resources = Utils.generateResources(amountOfResources, 0.5d, maxPingTime);
+            List<Task> tasks = Utils.generateTasks(amountOfTasks, minTaskDuration, maxTaskDuration, resources, maxDataAccessTime);
 
             resources.forEach(Resource::start);
-            for (final LoadBalancer.Rule rule : LoadBalancer.Rule.values()) {
+            for (final LoadBalancer.Rule rule : rules) {
                 tasks.forEach(Task::reset);
                 resources.forEach(Resource::reset);
 
-                long[] results = getResults(rule, tasks, resources, minTaskDuration, maxTaskDuration);
-                if (RESULTS.get(rule) == null) {
-                    RESULTS.put(rule, results);
-                } else {
-                    RESULTS.put(rule, Utils.sum(RESULTS.get(rule), results));
-                }
+                long[] results = getResults(rule, tasks, resources, minTaskDuration, maxTaskDuration, cacheUpdateInterval);
+                if (RESULTS.get(rule) == null) RESULTS.put(rule, results);
+                else RESULTS.put(rule, Utils.sum(RESULTS.get(rule), results));
             }
 
             resources.forEach(Resource::shouldBeTerminated);
@@ -50,7 +50,7 @@ public class GridEmulator {
         }
 
         for (LoadBalancer.Rule rule : RESULTS.keySet()) {
-            long[] finalResults = Utils.devide(RESULTS.get(rule), experiments);
+            long[] finalResults = Utils.divide(RESULTS.get(rule), experiments);
             //RESULTS.put(rule, finalResults);
 
             final String stats = rule.toString() + ", " + finalResults[0] + ", " + finalResults[1] + ", " +
@@ -63,10 +63,10 @@ public class GridEmulator {
         bufferedWriter.close();
     }
 
-    private static long[] getResults(LoadBalancer.Rule rule, List<Task> tasks, List<Resource> resources, long minTaskDuration, long maxTaskDuration) throws InterruptedException {
+    private static long[] getResults(LoadBalancer.Rule rule, List<Task> tasks, List<Resource> resources, long minTaskDuration, long maxTaskDuration, long cacheUpdateInterval) throws InterruptedException {
         long startTime = System.currentTimeMillis();
         for (Task task : tasks) {
-            LoadBalancer.getTargetResource(rule, task, resources).executeTask(task);
+            LoadBalancer.getTargetResource(rule, task, resources, cacheUpdateInterval).executeTask(task);
             Thread.sleep((maxTaskDuration + minTaskDuration) / (resources.size() * 2));
         }
         while (tasks.stream().filter(Task::isCompleted).count() != tasks.size()) {

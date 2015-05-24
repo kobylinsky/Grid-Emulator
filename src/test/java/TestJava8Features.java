@@ -13,7 +13,7 @@ public class TestJava8Features {
         Task task = new Task(1000);
         task.addedToTheQueue();
         assertFalse(task.isCompleted());
-        task.execute(1);
+        task.execute(new Resource(1, 0));
         assertTrue(task.isCompleted());
     }
 
