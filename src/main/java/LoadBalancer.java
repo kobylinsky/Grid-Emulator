@@ -95,6 +95,7 @@ public class LoadBalancer {
                     task.getExecutionTime() / resource.getProcessingRate());
             if (resourceFutureQueueDuration < targetResourceFutureQueueDuration) {
                 targetResource = resource;
+                targetResourceFutureQueueDuration = resourceFutureQueueDuration;
             }
         }
         resourcesDurationCache.put(targetResource, targetResourceFutureQueueDuration);
