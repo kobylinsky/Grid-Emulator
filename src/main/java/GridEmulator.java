@@ -10,18 +10,27 @@ public class GridEmulator {
     private static final Map<LoadBalancer.Rule, long[]> RESULTS = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
-        LoadBalancer.Rule[] rules = LoadBalancer.Rule.values();
-        int experiments = 5;
+        LoadBalancer.Rule[] rules = new LoadBalancer.Rule[]{
+                LoadBalancer.Rule.RANDOM,
+                LoadBalancer.Rule.ROUND_ROBIN,
+                LoadBalancer.Rule.MIN_EXECUTION,
+                LoadBalancer.Rule.MIN_QUEUE,
+                LoadBalancer.Rule.K_MEANS};
 
-        int amountOfTasks = 100;
-        int amountOfResources = 5;
+        int experiments = 10;
 
-        int minTaskDuration = 400;
-        int maxTaskDuration = 600;
-        int cacheUpdateInterval = 500;
+        int amountOfTasks = 1000;
+        int amountOfResources = 10;
 
-        int maxPingTime = 10;
-        int maxDataAccessTime = 50;
+        double resourcesFluctuationRate = 0.5d;
+        int minTaskDuration = 800;
+        int maxTaskDuration = 1200;
+        int cacheUpdateInterval = 1000;
+
+        int maxPingTime = 15;
+        int maxDataAccessTime = 10;
+
+        int queueAppendingInterval = (maxTaskDuration + minTaskDuration) / (amountOfResources * 2);
 
         String fileName = String.format("./%s.csv", String.format("%d_%dres_%dtasks_%ddur",
                 System.currentTimeMillis(), amountOfResources, amountOfTasks, (minTaskDuration + maxTaskDuration) / 2));
@@ -32,7 +41,7 @@ public class GridEmulator {
         bufferedWriter.newLine();
 
         for (int i = 0; i < experiments; i++) {
-            List<Resource> resources = Utils.generateResources(amountOfResources, 0.5d, maxPingTime);
+            List<Resource> resources = Utils.generateResources(amountOfResources, resourcesFluctuationRate, maxPingTime);
             List<Task> tasks = Utils.generateTasks(amountOfTasks, minTaskDuration, maxTaskDuration, resources, maxDataAccessTime);
 
             resources.forEach(Resource::start);
@@ -40,13 +49,14 @@ public class GridEmulator {
                 tasks.forEach(Task::reset);
                 resources.forEach(Resource::reset);
 
-                long[] results = getResults(rule, tasks, resources, minTaskDuration, maxTaskDuration, cacheUpdateInterval);
+                long[] results = executeAllTasks(rule, tasks, resources, cacheUpdateInterval,
+                        queueAppendingInterval);
                 if (RESULTS.get(rule) == null) RESULTS.put(rule, results);
                 else RESULTS.put(rule, Utils.sum(RESULTS.get(rule), results));
+                System.out.println(String.format("Experiment %d/%d for rule %s completed.", i, experiments, rule));
             }
 
             resources.forEach(Resource::shouldBeTerminated);
-            System.out.println(String.format("Experiment %d completed.", i));
         }
 
         for (LoadBalancer.Rule rule : RESULTS.keySet()) {
@@ -63,14 +73,29 @@ public class GridEmulator {
         bufferedWriter.close();
     }
 
-    private static long[] getResults(LoadBalancer.Rule rule, List<Task> tasks, List<Resource> resources, long minTaskDuration, long maxTaskDuration, long cacheUpdateInterval) throws InterruptedException {
+    private static long[] executeAllTasks(LoadBalancer.Rule rule, List<Task> tasks, List<Resource> resources,
+                                          long cacheUpdateInterval, long queueAppendingInterval) throws InterruptedException {
+        long updateInterval = 5000;
+        long lastOutput = System.currentTimeMillis();
         long startTime = System.currentTimeMillis();
-        for (Task task : tasks) {
+        for (int i = 0; i < tasks.size(); i++) {
+            Task task = tasks.get(i);
             LoadBalancer.getTargetResource(rule, task, resources, cacheUpdateInterval).executeTask(task);
-            Thread.sleep((maxTaskDuration + minTaskDuration) / (resources.size() * 2));
+            Thread.sleep(queueAppendingInterval);
+            if (System.currentTimeMillis() - lastOutput >= updateInterval) {
+                System.out.println(String.format("Tasks queued: %d/%d", i, tasks.size()));
+                lastOutput = System.currentTimeMillis();
+            }
+
         }
-        while (tasks.stream().filter(Task::isCompleted).count() != tasks.size()) {
-            Thread.sleep(10);
+        long completedTasks;
+
+        while ((completedTasks = tasks.stream().filter(Task::isCompleted).count()) != tasks.size()) {
+            if (System.currentTimeMillis() - lastOutput >= updateInterval) {
+                System.out.println(String.format("Completed tasks: %d/%d", completedTasks, tasks.size()));
+                lastOutput = System.currentTimeMillis();
+            }
+            Thread.sleep(25);
         }
         long endTime = System.currentTimeMillis();
 

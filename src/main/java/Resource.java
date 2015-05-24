@@ -90,18 +90,25 @@ public class Resource extends Thread {
         return processingRate;
     }
 
-    @Override
-    public String toString() {
-        return "Resource[" + id + "]";
-    }
-
     private void sleep() {
         try {
             Thread.sleep(pingTime);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
 
+    @Override
+    public String toString() {
+        return "Resource{" +
+                "queue=" + queue +
+                ", id=" + id +
+                ", shouldBeTerminated=" + shouldBeTerminated +
+                ", processingRate=" + processingRate +
+                ", pingTime=" + pingTime +
+                ", idleStartTime=" + idleStartTime +
+                ", idle=" + idle +
+                '}';
     }
 
     public void reset() {
