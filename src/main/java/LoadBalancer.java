@@ -12,6 +12,7 @@ public class LoadBalancer {
     private static long resourceCacheUpdateTime;
 
     public static Resource getTargetResource(Rule rule, Task task, List<Resource> resources, long cacheUpdateInterval) {
+        task.addedToTheQueue();
         switch (rule) {
             case RANDOM:
                 return getResourceByRandom(resources);

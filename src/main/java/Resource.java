@@ -26,7 +26,6 @@ public class Resource extends Thread {
         sleep();
         synchronized (queue) {
             queue.add(task);
-            task.addedToTheQueue();
         }
     }
 
