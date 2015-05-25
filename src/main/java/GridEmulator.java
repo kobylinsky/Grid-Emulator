@@ -1,13 +1,11 @@
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class GridEmulator {
 
-    private static final Map<LoadBalancer.Rule, long[]> RESULTS = new HashMap<>();
+    //private static final Map<LoadBalancer.Rule, long[]> RESULTS = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
         LoadBalancer.Rule[] rules = new LoadBalancer.Rule[]{
@@ -17,7 +15,7 @@ public class GridEmulator {
                 LoadBalancer.Rule.MIN_QUEUE,
                 LoadBalancer.Rule.K_MEANS};
 
-        int experiments = 10;
+        int experiments = 20;
 
         int amountOfTasks = 1000;
         int amountOfResources = 10;
@@ -32,42 +30,29 @@ public class GridEmulator {
 
         int queueAppendingInterval = (maxTaskDuration + minTaskDuration) / (amountOfResources * 2);
 
-        String fileName = String.format("./%s.csv", String.format("%d_%dres_%dtasks_%ddur",
-                System.currentTimeMillis(), amountOfResources, amountOfTasks, (minTaskDuration + maxTaskDuration) / 2));
         String reportHeader = "Алгоритм, Загальний час (мс), Середній час очікування (мс), Максимальний час очікування (мс), Середній час простою (мс), Максимальний час простою (мс)";
-
-        final BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8"));
+        String fileName = String.format("./%s.csv", String.format("%d_%dres_%dtasks_%ddur", System.currentTimeMillis(), amountOfResources, amountOfTasks, (minTaskDuration + maxTaskDuration) / 2));
+        BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), "Cp1251"));
         bufferedWriter.write(reportHeader);
         bufferedWriter.newLine();
 
-        for (int i = 0; i < experiments; i++) {
+        for (int i = 1; i <= experiments; i++) {
             List<Resource> resources = Utils.generateResources(amountOfResources, resourcesFluctuationRate, maxPingTime);
+            System.out.println(resources);
             List<Task> tasks = Utils.generateTasks(amountOfTasks, minTaskDuration, maxTaskDuration, resources, maxDataAccessTime);
-
             resources.forEach(Resource::start);
+
             for (final LoadBalancer.Rule rule : rules) {
                 tasks.forEach(Task::reset);
                 resources.forEach(Resource::reset);
 
-                long[] results = executeAllTasks(rule, tasks, resources, cacheUpdateInterval,
-                        queueAppendingInterval);
-                if (RESULTS.get(rule) == null) RESULTS.put(rule, results);
-                else RESULTS.put(rule, Utils.sum(RESULTS.get(rule), results));
+                long[] results = executeAllTasks(rule, tasks, resources, cacheUpdateInterval, queueAppendingInterval);
+
+                bufferedWriter.write(rule.toString() + ", " + results[0] + ", " + results[1] + ", " + results[2] + ", " + results[3] + ", " + results[4]);
+                bufferedWriter.newLine();
                 System.out.println(String.format("Experiment %d/%d for rule %s completed.", i, experiments, rule));
             }
-
             resources.forEach(Resource::shouldBeTerminated);
-        }
-
-        for (LoadBalancer.Rule rule : RESULTS.keySet()) {
-            long[] finalResults = Utils.divide(RESULTS.get(rule), experiments);
-            //RESULTS.put(rule, finalResults);
-
-            final String stats = rule.toString() + ", " + finalResults[0] + ", " + finalResults[1] + ", " +
-                    finalResults[2] + ", " + finalResults[3] + ", " + finalResults[4];
-
-            bufferedWriter.write(stats);
-            bufferedWriter.newLine();
         }
 
         bufferedWriter.close();
@@ -75,26 +60,26 @@ public class GridEmulator {
 
     private static long[] executeAllTasks(LoadBalancer.Rule rule, List<Task> tasks, List<Resource> resources,
                                           long cacheUpdateInterval, long queueAppendingInterval) throws InterruptedException {
-        long updateInterval = 5000;
-        long lastOutput = System.currentTimeMillis();
+        // long updateInterval = 5000;
+        // long lastOutput = System.currentTimeMillis();
         long startTime = System.currentTimeMillis();
         for (int i = 0; i < tasks.size(); i++) {
             Task task = tasks.get(i);
             LoadBalancer.getTargetResource(rule, task, resources, cacheUpdateInterval).executeTask(task);
             Thread.sleep(queueAppendingInterval);
-            if (System.currentTimeMillis() - lastOutput >= updateInterval) {
+            /*if (System.currentTimeMillis() - lastOutput >= updateInterval) {
                 System.out.println(String.format("Tasks queued: %d/%d", i, tasks.size()));
                 lastOutput = System.currentTimeMillis();
-            }
+            }*/
 
         }
-        long completedTasks;
+        //long completedTasks;
 
-        while ((completedTasks = tasks.stream().filter(Task::isCompleted).count()) != tasks.size()) {
-            if (System.currentTimeMillis() - lastOutput >= updateInterval) {
+        while ((/*completedTasks = */tasks.stream().filter(Task::isCompleted).count()) != tasks.size()) {
+            /*if (System.currentTimeMillis() - lastOutput >= updateInterval) {
                 System.out.println(String.format("Completed tasks: %d/%d", completedTasks, tasks.size()));
                 lastOutput = System.currentTimeMillis();
-            }
+            }*/
             Thread.sleep(25);
         }
         long endTime = System.currentTimeMillis();

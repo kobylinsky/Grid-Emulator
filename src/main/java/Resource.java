@@ -1,4 +1,3 @@
-import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -25,7 +24,6 @@ public class Resource extends Thread {
 
     public void executeTask(Task task) {
         sleep();
-
         synchronized (queue) {
             queue.add(task);
             task.addedToTheQueue();
@@ -36,18 +34,18 @@ public class Resource extends Thread {
     public void run() {
         idleStartTime = System.currentTimeMillis();
         while (!shouldBeTerminated) {
-            Optional<Task> task;
+            Task task;
             synchronized (queue) {
-                task = Optional.ofNullable(queue.peek());
+                task = queue.peek();
             }
-            if (task.isPresent()) {
+            if (task != null) {
                 if (idleStartTime != 0) {
                     idle += (System.currentTimeMillis() - idleStartTime);
                     idleStartTime = 0;
                 }
-                task.get().execute(this);
+                task.execute(this);
                 synchronized (queue) {
-                    queue.remove(task.get());
+                    queue.remove(task);
                     if (queue.isEmpty()) {
                         idleStartTime = System.currentTimeMillis();
                     }
@@ -58,13 +56,11 @@ public class Resource extends Thread {
 
     public boolean isBusy() {
         sleep();
-
         return queue.size() != 0;
     }
 
     public int getQueueSize() {
         sleep();
-
         return queue.size();
     }
 
@@ -100,15 +96,7 @@ public class Resource extends Thread {
 
     @Override
     public String toString() {
-        return "Resource{" +
-                "queue=" + queue +
-                ", id=" + id +
-                ", shouldBeTerminated=" + shouldBeTerminated +
-                ", processingRate=" + processingRate +
-                ", pingTime=" + pingTime +
-                ", idleStartTime=" + idleStartTime +
-                ", idle=" + idle +
-                '}';
+        return String.format("Resource[%d]: {perf=%f, pingTime=%d}", id, processingRate, pingTime);
     }
 
     public void reset() {
