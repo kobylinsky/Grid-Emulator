@@ -1,9 +1,12 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 public class Utils {
 
-    static List<Task> generateTasks(int amount, int minTaskDuration, int maxTaskDuration, List<Resource> resources,
-                                    int maxAccessTime) {
+    static List<Task> generateTasks(int amount, int minTaskDuration, int maxTaskDuration, List<Resource> resources, int maxAccessTime) {
         ArrayList<Task> tasks = new ArrayList<>(amount);
         Random random = new Random();
         for (int i = 0; i < amount; i++) {

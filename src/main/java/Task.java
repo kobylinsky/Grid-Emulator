@@ -13,7 +13,8 @@ public class Task {
     private long waitTime;
 
     public Task(int executionTime) {
-        id = nextId++;
+        id = nextId;
+        nextId++;
         this.executionTime = executionTime;
     }
 
@@ -34,7 +35,9 @@ public class Task {
     }
 
     public void execute(Resource resource) {
-        if (startTime == 0) throw new IllegalStateException("Task should be added to the queue first!");
+        if (startTime == 0) {
+            throw new IllegalStateException("Task should be added to the queue first!");
+        }
         try {
             Thread.sleep(resourceDataAccessTime.get(resource) + (long) (executionTime / resource.getProcessingRate()));
         } catch (InterruptedException e) {
@@ -42,7 +45,6 @@ public class Task {
         }
         endTime = System.currentTimeMillis();
         waitTime = endTime - startTime - (long) (executionTime / resource.getProcessingRate());
-        //System.out.println(this + " completed");
     }
 
     @Override

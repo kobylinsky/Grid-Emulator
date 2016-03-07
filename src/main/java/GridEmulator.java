@@ -5,15 +5,13 @@ import java.util.List;
 
 public class GridEmulator {
 
-    //private static final Map<LoadBalancer.Rule, long[]> RESULTS = new HashMap<>();
-
     public static void main(String[] args) throws Exception {
-        LoadBalancer.Rule[] rules = new LoadBalancer.Rule[]{
+        LoadBalancer.Rule[] rules = new LoadBalancer.Rule[] {
                 LoadBalancer.Rule.RANDOM,
                 LoadBalancer.Rule.ROUND_ROBIN,
                 LoadBalancer.Rule.MIN_EXECUTION,
                 LoadBalancer.Rule.MIN_QUEUE,
-                LoadBalancer.Rule.K_MEANS};
+                LoadBalancer.Rule.K_MEANS };
 
         int experiments = 20;
 
@@ -30,8 +28,9 @@ public class GridEmulator {
 
         int queueAppendingInterval = (maxTaskDuration + minTaskDuration) / (amountOfResources * 2);
 
-        String reportHeader = "Алгоритм, Загальний час (мс), Середній час очікування (мс), Максимальний час очікування (мс), Середній час простою (мс), Максимальний час простою (мс)";
-        String fileName = String.format("./%s.csv", String.format("%d_%dres_%dtasks_%ddur", System.currentTimeMillis(), amountOfResources, amountOfTasks, (minTaskDuration + maxTaskDuration) / 2));
+        String reportHeader = "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ (пїЅпїЅ), пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅ), пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅ), пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅ), пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅ)";
+        String fileName = String.format("./%s.csv",
+                String.format("%d_%dres_%dtasks_%ddur", System.currentTimeMillis(), amountOfResources, amountOfTasks, (minTaskDuration + maxTaskDuration) / 2));
         BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), "Cp1251"));
         bufferedWriter.write(reportHeader);
         bufferedWriter.newLine();
@@ -58,28 +57,15 @@ public class GridEmulator {
         bufferedWriter.close();
     }
 
-    private static long[] executeAllTasks(LoadBalancer.Rule rule, List<Task> tasks, List<Resource> resources,
-                                          long cacheUpdateInterval, long queueAppendingInterval) throws InterruptedException {
-        // long updateInterval = 5000;
-        // long lastOutput = System.currentTimeMillis();
+    private static long[] executeAllTasks(LoadBalancer.Rule rule, List<Task> tasks, List<Resource> resources, long cacheUpdateInterval,
+            long queueAppendingInterval) throws InterruptedException {
         long startTime = System.currentTimeMillis();
         for (int i = 0; i < tasks.size(); i++) {
             Task task = tasks.get(i);
             LoadBalancer.getTargetResource(rule, task, resources, cacheUpdateInterval).executeTask(task);
             Thread.sleep(queueAppendingInterval);
-            /*if (System.currentTimeMillis() - lastOutput >= updateInterval) {
-                System.out.println(String.format("Tasks queued: %d/%d", i, tasks.size()));
-                lastOutput = System.currentTimeMillis();
-            }*/
-
         }
-        //long completedTasks;
-
-        while ((/*completedTasks = */tasks.stream().filter(Task::isCompleted).count()) != tasks.size()) {
-            /*if (System.currentTimeMillis() - lastOutput >= updateInterval) {
-                System.out.println(String.format("Completed tasks: %d/%d", completedTasks, tasks.size()));
-                lastOutput = System.currentTimeMillis();
-            }*/
+        while ((tasks.stream().filter(Task::isCompleted).count()) != tasks.size()) {
             Thread.sleep(25);
         }
         long endTime = System.currentTimeMillis();
@@ -88,14 +74,16 @@ public class GridEmulator {
 
         final long maxWaitTime = tasks.stream().max((t1, t2) -> Long.compare(t1.getWaitTime(), t2.getWaitTime())).get().getWaitTime();
         long avgWaitTime = 0;
-        for (Task task : tasks) avgWaitTime += task.getWaitTime();
+        for (Task task : tasks)
+            avgWaitTime += task.getWaitTime();
         avgWaitTime /= tasks.size();
 
         final long maxIdleTime = resources.stream().max((r1, r2) -> Long.compare(r1.getIdle(), r2.getIdle())).get().getIdle();
         long avgIdleTime = 0;
-        for (Resource resource : resources) avgIdleTime += resource.getIdle();
+        for (Resource resource : resources)
+            avgIdleTime += resource.getIdle();
         avgIdleTime /= resources.size();
 
-        return new long[]{duration, avgWaitTime, maxWaitTime, avgIdleTime, maxIdleTime};
+        return new long[] { duration, avgWaitTime, maxWaitTime, avgIdleTime, maxIdleTime };
     }
 }

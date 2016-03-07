@@ -1,5 +1,3 @@
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +25,7 @@ public class LoadBalancer {
             case ADAPTIVE:
                 return getResourceAdaptively(task, resources, cacheUpdateInterval);
             default:
-                throw new NotImplementedException();
+                throw new RuntimeException("Not implemented yet");
         }
     }
 
@@ -36,14 +34,14 @@ public class LoadBalancer {
     }
 
     private static Resource getResourceByRoundRobin(List<Resource> resources) {
-        return resources.get(++roundRobinLastAssignedResourceId < resources.size() ?
-                roundRobinLastAssignedResourceId : (roundRobinLastAssignedResourceId = 0));
+        return resources.get(++roundRobinLastAssignedResourceId < resources.size() ? roundRobinLastAssignedResourceId : (roundRobinLastAssignedResourceId = 0));
     }
 
     private static Resource getResourceByMinExecution(List<Resource> resources) {
         Resource resourceWithMinQueueDuration = resources.get(0);
         for (Resource resource : resources) {
-            if (resource == resourceWithMinQueueDuration) continue;
+            if (resource == resourceWithMinQueueDuration)
+                continue;
             if (resource.getQueueDuration() < resourceWithMinQueueDuration.getQueueDuration()) {
                 resourceWithMinQueueDuration = resource;
             }
@@ -54,7 +52,8 @@ public class LoadBalancer {
     private static Resource getResourceByMinQueueSize(List<Resource> resources) {
         Resource resourceWithMinQueue = resources.get(0);
         for (Resource resource : resources) {
-            if (resource == resourceWithMinQueue) continue;
+            if (resource == resourceWithMinQueue)
+                continue;
             if (resource.getQueueSize() < resourceWithMinQueue.getQueueSize()) {
                 resourceWithMinQueue = resource;
             }
@@ -67,7 +66,8 @@ public class LoadBalancer {
         Resource resourceWithMinQueue = resources.get(0);
         for (int i = 0; i < resources.size() / 2; i++) {
             Resource resource = resources.get(i);
-            if (resource == resourceWithMinQueue) continue;
+            if (resource == resourceWithMinQueue)
+                continue;
             if (resource.getQueueDuration() < resourceWithMinQueue.getQueueDuration()) {
                 resourceWithMinQueue = resource;
             }
@@ -76,8 +76,7 @@ public class LoadBalancer {
     }
 
     private static Resource getResourceAdaptively(Task task, List<Resource> resources, long cacheUpdateInterval) {
-        if (System.currentTimeMillis() - resourceCacheUpdateTime > cacheUpdateInterval ||
-                resourceCacheUpdateTime == 0) {
+        if (System.currentTimeMillis() - resourceCacheUpdateTime > cacheUpdateInterval || resourceCacheUpdateTime == 0) {
             resourcesQueueDurationCache.clear();
             for (Resource resource : resources) {
                 resourcesQueueDurationCache.put(resource, resource.getQueueDuration());
@@ -90,7 +89,8 @@ public class LoadBalancer {
                 task.getDataAccessTime(targetResource) + task.getExecutionTime() / targetResource.getProcessingRate());
 
         for (Resource resource : resourcesQueueDurationCache.keySet()) {
-            if (resource == targetResource) continue;
+            if (resource == targetResource)
+                continue;
             long resourceFutureQueueDuration = (long) (resourcesQueueDurationCache.get(resource) +
                     task.getDataAccessTime(resource) + task.getExecutionTime() / resource.getProcessingRate());
             if (resourceFutureQueueDuration < targetResourceFutureQueueDuration) {

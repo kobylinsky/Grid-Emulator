@@ -15,7 +15,8 @@ public class Resource extends Thread {
     private long idle;
 
     public Resource(double processingRate, long pingTime) {
-        id = nextId++;
+        id = nextId;
+        nextId++;
         queue = new LinkedBlockingQueue<>();
         shouldBeTerminated = false;
         this.processingRate = processingRate;
@@ -55,7 +56,7 @@ public class Resource extends Thread {
 
     public boolean isBusy() {
         sleep();
-        return queue.size() != 0;
+        return !queue.isEmpty();
     }
 
     public int getQueueSize() {
