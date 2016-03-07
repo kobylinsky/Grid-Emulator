@@ -6,10 +6,10 @@ import java.util.Random;
 
 import static org.junit.Assert.*;
 
-public class TestJava8Features {
+public class TaskTest {
 
     @Test
-    public void testOptinals() {
+    public void testExecute() {
         Task task = new Task(1000);
         task.addedToTheQueue();
         assertFalse(task.isCompleted());
@@ -17,9 +17,8 @@ public class TestJava8Features {
         assertTrue(task.isCompleted());
     }
 
-
     @Test
-    public void testLambdas() throws InterruptedException {
+    public void testExceuteSeveral() throws InterruptedException {
         List<Task> tasks = new ArrayList<Task>();
         Task task = new Task(2000);
         tasks.add(task);
